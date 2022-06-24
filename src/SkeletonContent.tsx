@@ -1,7 +1,8 @@
 import * as React from 'react';
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import Animated, { interpolateNode } from 'react-native-reanimated';
+import Animated, { FadeIn, interpolateNode } from 'react-native-reanimated';
 import {
   interpolateColor,
   loop,
@@ -51,7 +52,7 @@ const useLayout = () => {
   return [size, onLayout];
 };
 
-const SkeletonContent: React.FunctionComponent<ISkeletonContentProps> = ({
+const SkeletonComponent: React.FunctionComponent<ISkeletonContentProps> = ({
   containerStyle = styles.container,
   easing = DEFAULT_EASING,
   duration = DEFAULT_DURATION,
@@ -390,6 +391,61 @@ const SkeletonContent: React.FunctionComponent<ISkeletonContentProps> = ({
   return (
     <View style={containerStyle} onLayout={onLayout}>
       {isLoading ? getBones(layout!, children) : children}
+    </View>
+  );
+};
+
+const SkeletonContent: React.FunctionComponent<ISkeletonContentProps> = ({
+  containerStyle = styles.container,
+  easing = DEFAULT_EASING,
+  duration = DEFAULT_DURATION,
+  layout = [],
+  animationType = DEFAULT_ANIMATION_TYPE,
+  animationDirection = DEFAULT_ANIMATION_DIRECTION,
+  isLoading = DEFAULT_LOADING,
+  boneColor = DEFAULT_BONE_COLOR,
+  highlightColor = DEFAULT_HIGHLIGHT_COLOR,
+  children
+}) => {
+  const [, onLayout] = useLayout();
+  const [fadeInEnabled, setFadeInEnabled] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isLoading && !fadeInEnabled) {
+      setFadeInEnabled(true);
+    }
+  }, [fadeInEnabled, isLoading]);
+
+  const getComponent = () => {
+    if (isLoading) {
+      return (
+        <SkeletonComponent
+          containerStyle={containerStyle}
+          easing={easing}
+          duration={duration}
+          layout={layout}
+          animationType={animationType}
+          animationDirection={animationDirection}
+          isLoading={isLoading}
+          boneColor={boneColor}
+          highlightColor={highlightColor}
+        />
+      );
+    }
+    if (fadeInEnabled && isLoading === false) {
+      return (
+        <Animated.View entering={FadeIn.duration(2000)}>
+          {children}
+        </Animated.View>
+      );
+    }
+
+    return <>{children}</>;
+  };
+
+  return (
+    <View style={containerStyle} onLayout={onLayout}>
+      {getComponent()}
     </View>
   );
 };
