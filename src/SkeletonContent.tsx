@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Animated, { FadeIn, interpolateNode } from 'react-native-reanimated';
 import {
@@ -434,7 +434,11 @@ const SkeletonContent: React.FunctionComponent<ISkeletonContentProps> = ({
     }
     if (fadeInEnabled && isLoading === false) {
       return (
-        <Animated.View entering={FadeIn.duration(2000)}>
+        <Animated.View
+          entering={FadeIn.duration(2000)}
+          needsOffscreenAlphaCompositing={Platform.OS === 'android'}
+          renderToHardwareTextureAndroid
+        >
           {children}
         </Animated.View>
       );
