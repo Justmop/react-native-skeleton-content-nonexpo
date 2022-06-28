@@ -420,10 +420,10 @@ const SkeletonContent: React.FunctionComponent<ISkeletonContentProps> = ({
       setFadeInEnabled(true);
     }
 
-    if (fadeInEnabled && isLoading === false && !animationInProgress) {
+    if (fadeInEnabled && isLoading === false) {
       setAnimationInProgress(true);
     }
-  }, [animationInProgress, fadeInEnabled, isLoading]);
+  }, [fadeInEnabled, isLoading]);
 
   const animationEndCallback = (finished: boolean) => {
     if (finished) {
