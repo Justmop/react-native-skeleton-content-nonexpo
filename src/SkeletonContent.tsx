@@ -2,7 +2,11 @@ import * as React from 'react';
 import { useEffect } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import Animated, { FadeIn, interpolateNode } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  interpolateNode,
+  runOnJS
+} from 'react-native-reanimated';
 import {
   interpolateColor,
   loop,
@@ -409,12 +413,23 @@ const SkeletonContent: React.FunctionComponent<ISkeletonContentProps> = ({
 }) => {
   const [, onLayout] = useLayout();
   const [fadeInEnabled, setFadeInEnabled] = useState<boolean>(false);
+  const [animationInProgress, setAnimationInProgress] = useState<boolean>(true);
 
   useEffect(() => {
     if (isLoading && !fadeInEnabled) {
       setFadeInEnabled(true);
     }
-  }, [fadeInEnabled, isLoading]);
+
+    if (fadeInEnabled && isLoading === false && !animationInProgress) {
+      setAnimationInProgress(true);
+    }
+  }, [animationInProgress, fadeInEnabled, isLoading]);
+
+  const animationEndCallback = (finished: boolean) => {
+    if (finished) {
+      setAnimationInProgress(false);
+    }
+  };
 
   const getComponent = () => {
     if (isLoading) {
@@ -435,9 +450,15 @@ const SkeletonContent: React.FunctionComponent<ISkeletonContentProps> = ({
     if (fadeInEnabled && isLoading === false) {
       return (
         <Animated.View
-          entering={FadeIn.duration(2000)}
-          needsOffscreenAlphaCompositing={Platform.OS === 'android'}
-          renderToHardwareTextureAndroid
+          entering={FadeIn.duration(2000).withCallback(finished => {
+            'worklet';
+
+            runOnJS(animationEndCallback)(finished);
+          })}
+          needsOffscreenAlphaCompositing={
+            Platform.OS === 'android' && animationInProgress
+          }
+          renderToHardwareTextureAndroid={animationInProgress}
         >
           {children}
         </Animated.View>
