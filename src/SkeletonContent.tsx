@@ -1,12 +1,8 @@
 import * as React from 'react';
 import { useEffect } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import Animated, {
-  FadeIn,
-  interpolateNode,
-  runOnJS
-} from 'react-native-reanimated';
+import Animated, { interpolateNode } from 'react-native-reanimated';
 import {
   interpolateColor,
   loop,
@@ -25,6 +21,7 @@ import {
   ISkeletonContentProps,
   IDirection
 } from './Constants';
+import FadeIn from './FadeIn';
 
 const { useCode, set, cond, eq } = Animated;
 const { useState, useCallback } = React;
@@ -413,23 +410,12 @@ const SkeletonContent: React.FunctionComponent<ISkeletonContentProps> = ({
 }) => {
   const [, onLayout] = useLayout();
   const [fadeInEnabled, setFadeInEnabled] = useState<boolean>(false);
-  const [animationInProgress, setAnimationInProgress] = useState<boolean>(true);
 
   useEffect(() => {
     if (isLoading && !fadeInEnabled) {
       setFadeInEnabled(true);
     }
-
-    if (fadeInEnabled && isLoading === false) {
-      setAnimationInProgress(true);
-    }
   }, [fadeInEnabled, isLoading]);
-
-  const animationEndCallback = (finished: boolean) => {
-    if (finished) {
-      setAnimationInProgress(false);
-    }
-  };
 
   const getComponent = () => {
     if (isLoading) {
@@ -448,21 +434,7 @@ const SkeletonContent: React.FunctionComponent<ISkeletonContentProps> = ({
       );
     }
     if (fadeInEnabled && isLoading === false) {
-      return (
-        <Animated.View
-          entering={FadeIn.duration(2000).withCallback(finished => {
-            'worklet';
-
-            runOnJS(animationEndCallback)(finished);
-          })}
-          needsOffscreenAlphaCompositing={
-            Platform.OS === 'android' && animationInProgress
-          }
-          renderToHardwareTextureAndroid={animationInProgress}
-        >
-          {children}
-        </Animated.View>
-      );
+      return <FadeIn>{children}</FadeIn>;
     }
 
     return <>{children}</>;
